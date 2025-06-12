@@ -202,4 +202,5 @@ usort($details, function($a, $b) {
 
 如有问题或建议，请联系开发团队。
 
+<img src="./docs/image/wechat.png" alt="donate" width="200" />
 ---
