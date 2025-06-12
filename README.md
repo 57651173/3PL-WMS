@@ -4,25 +4,6 @@
 
 本项目是一个企业级仓储管理系统的核心模块，专注于订单处理、库存管理、拣货作业和发货流程。系统采用现代化的架构设计，支持高并发、高可用的仓储作业场景，并严格遵循FIFO（先进先出）原则进行库存管理。
 
-## 🏗️ 核心架构
-
-### 主要服务类
-
-1. **OrderService** - 订单处理服务
-2. **WavePickingService** - 波次拣货服务
-3. **InventoryService** - 库存服务（支持FIFO原则）
-4. **PickingService** - 拣货执行服务
-
-### 数据库设计
-
-- **ky_sales_order** - 销售订单主表
-- **ky_sales_order_item** - 销售订单明细表
-- **ky_sales_picking** - 拣货单主表
-- **ky_sales_picking_detail** - 拣货单明细表
-- **ky_inventory_warehouse** - 仓库库存表
-- **ky_inventory_location** - 库位库存表
-- **ky_inventory_batch** - 批次库存表（FIFO核心表）
-
 ## 🔄 完整业务流程
 
 ### 第一阶段：订单处理与拣货明细生成
@@ -51,15 +32,6 @@
 8. 实时跟踪拣货进度
 ```
 
-**关键方法：**
-- `OrderService::performPrePickSorting()`
-- `InventoryService::freezeLocationStockByFifo()`
-- `InventoryService::autoAllocateStockFreeze()` - FIFO自动分配冻结
-- `WavePickingService::generateWavePickingBatch()`
-- `PickingService::startPicking()`
-- `PickingService::scanAndPick()`
-- `PickingService::completePicking()`
-
 **核心特性：**
 - **FIFO 库存冻结** - 按入库时间先进先出原则冻结批次库存
 - **智能路径优化** - 按库位编码排序优化拣货路径
@@ -78,11 +50,6 @@
 12. 客户签收 (STATUS_FINISH)
 ```
 
-**关键方法：**
-- `OrderService::shipOrderStock()`
-- `InventoryService::releaseOrderStock()` - FIFO释放库存
-- `InventoryService::autoReleaseStockFreeze()` - FIFO自动释放
-- `InventoryService::autoDeductStockFromLocation()` - FIFO自动扣减
 
 ## 🛠️ 技术特性
 
@@ -190,110 +157,7 @@ usort($details, function($a, $b) {
 });
 ```
 
-## 📊 使用示例
 
-### 1. FIFO库存冻结示例
-
-```php
-$inventoryService = new InventoryService();
-
-// 查看当前库存状态（按FIFO排序）
-$stockStatus = $inventoryService->getDetailedStockStatus('WH01', 'CUST001', 'SKU001', 'BAR001');
-
-// 执行FIFO库存冻结
-$result = $inventoryService->freezeOrderStock(
-    'ORD20241215001',
-    'WH01',
-    'CUST001',
-    [
-        [
-            'product_sku' => 'SKU001',
-            'sku_barcode' => 'BAR001',
-            'qty_ordered' => 50
-        ]
-    ],
-    "FIFO库存冻结演示"
-);
-
-// 系统会自动按入库时间先进先出的原则选择批次进行冻结
-```
-
-### 2. 订单处理阶段
-
-```php
-$orderService = new OrderService();
-$result = $orderService->performPrePickSorting('SO202412150001', true);
-
-// 返回结果包含：
-// - 生成拣货明细（遵循FIFO原则）
-```
-
-### 3. 波次拣货阶段
-
-```php
-$waveService = new WavePickingService();
-$waveResult = $waveService->generateWavePickingBatch([
-    'strategy' => WavePickingService::STRATEGY_TIME,
-    'warehouse_code' => 'WH01',
-    'max_orders' => 10,
-    'max_items' => 50
-], [
-    'picker' => 'picker001',
-    'optimize_path' => true
-]);
-
-// 返回结果包含：
-// - 生成拣货单
-```
-
-### 4. 手动分配明细
-
-```php
-$waveService = new WavePickingService();
-$assignResult = $waveService->assignDetailsToPickingManually(
-    [1, 2, 3], // 明细ID数组
-    'WWH0120241215000001' // 拣货单号
-);
-
-// 返回结果包含：
-// - 分配成功明细数量
-```
-
-### 5. 拣货执行阶段
-
-```php
-$pickingService = new PickingService();
-$pickingService->startPicking('WWH0120241215000001', 'picker001');
-$pickingService->scanAndPick('WWH0120241215000001', 'SKU001', 10, 'BATCH001');
-$pickingService->completePicking('WWH0120241215000001');
-```
-
-## 🔧 配置选项
-
-### 部分发货配置
-
-```php
-$config = [
-    'enabled' => true,                    // 启用部分发货
-    'min_completion_rate' => 0.8,         // 最小完成率 80%
-    'max_partial_times' => 3,             // 最大部分发货次数
-    'auto_ship_threshold' => 0.9,         // 自动发货阈值 90%
-    'require_approval' => false,          // 无需审批
-    'notification_enabled' => true,       // 启用通知
-];
-
-$orderService->setPartialShipmentConfig($config, 'CUSTOMER001', 'WH001');
-```
-
-### 拣货类型配置
-
-```php
-$pickingOptions = [
-    'picking_type' => PickingService::TYPE_NORMAL,  // 普通拣货
-    'picker' => 'picker001',                        // 指定拣货员
-    'priority' => 1                                 // 优先级
-];
-```
 
 ## 📈 性能优化
 
@@ -322,44 +186,9 @@ $pickingOptions = [
 ### 环境要求
 
 - PHP 7.4+
-- Yii2 Framework
-- MySQL 8.0+
-- Redis 6.0+
+- MySQL 5.7+
+- Redis 5.0+
 
-### 配置步骤
-
-1. **数据库配置**
-```php
-'db' => [
-    'dsn' => 'mysql:host=localhost;dbname=warehouse',
-    'username' => 'root',
-    'password' => 'password',
-],
-```
-
-2. **Redis 配置**
-```php
-'redis' => [
-    'hostname' => 'localhost',
-    'port' => 6379,
-    'database' => 0,
-],
-```
-
-## 📋 API 接口
-
-### 订单处理接口
-
-- `POST /api/order/pre-pick-sorting` - 执行预拣货排序
-- `POST /api/wave/generate-picking-batch` - 生成波次拣货单
-- `GET /api/order/picking-info/{order_no}` - 获取拣货信息
-
-### 拣货管理接口
-
-- `POST /api/picking/start` - 开始拣货
-- `POST /api/picking/scan` - 扫码拣货
-- `POST /api/picking/complete` - 完成拣货
-- `GET /api/picking/details/{picking_no}` - 获取拣货详情
 
 ## 🎯 未来规划
 
@@ -374,7 +203,3 @@ $pickingOptions = [
 如有问题或建议，请联系开发团队。
 
 ---
-
-**版本信息：** v2.0.0  
-**最后更新：** 2024-12-15  
-**文档作者：** 仓储管理系统开发团队
