@@ -299,8 +299,8 @@ $pickingOptions = [
 
 - PHP 7.4+
 - Yii2 Framework
-- MySQL 8.0+
-- Redis 6.0+
+- MySQL 5.7+
+- Redis 5.0+
 
 ## 🎯 未来规划
 
