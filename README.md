@@ -1,5 +1,13 @@
 # 3PL-WMS仓储管理系统
 
+## 🌐 语言版本 / Language Versions
+- [中文 (Chinese)](README.md) - 当前页面
+- [English](README_EN.md)
+- [Deutsch (German)](README_DE.md)
+- [日本語 (Japanese)](README_JA.md)
+
+---
+
 ## 📋 项目概述
 
 本项目是一个企业级仓储管理系统的核心模块，专注于订单处理、库存管理、拣货作业和发货流程。系统采用现代化的架构设计，支持高并发、高可用的仓储作业场景，并严格遵循FIFO（先进先出）原则进行库存管理。
