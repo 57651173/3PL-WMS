@@ -1,8 +1,9 @@
-# 仓储管理系统 - 订单拣货发货模块
+# 3PL-WMS仓储管理系统
 
 ## 📋 项目概述
 
 本项目是一个企业级仓储管理系统的核心模块，专注于订单处理、库存管理、拣货作业和发货流程。系统采用现代化的架构设计，支持高并发、高可用的仓储作业场景，并严格遵循FIFO（先进先出）原则进行库存管理。
+
 
 ## 🔄 完整业务流程
 
@@ -32,6 +33,7 @@
 8. 实时跟踪拣货进度
 ```
 
+
 **核心特性：**
 - **FIFO 库存冻结** - 按入库时间先进先出原则冻结批次库存
 - **智能路径优化** - 按库位编码排序优化拣货路径
@@ -49,7 +51,6 @@
     ↓
 12. 客户签收 (STATUS_FINISH)
 ```
-
 
 ## 🛠️ 技术特性
 
@@ -157,7 +158,110 @@ usort($details, function($a, $b) {
 });
 ```
 
+## 📊 使用示例
 
+### 1. FIFO库存冻结示例
+
+```php
+$inventoryService = new InventoryService();
+
+// 查看当前库存状态（按FIFO排序）
+$stockStatus = $inventoryService->getDetailedStockStatus('WH01', 'CUST001', 'SKU001', 'BAR001');
+
+// 执行FIFO库存冻结
+$result = $inventoryService->freezeOrderStock(
+    'ORD20241215001',
+    'WH01',
+    'CUST001',
+    [
+        [
+            'product_sku' => 'SKU001',
+            'sku_barcode' => 'BAR001',
+            'qty_ordered' => 50
+        ]
+    ],
+    "FIFO库存冻结演示"
+);
+
+// 系统会自动按入库时间先进先出的原则选择批次进行冻结
+```
+
+### 2. 订单处理阶段
+
+```php
+$orderService = new OrderService();
+$result = $orderService->performPrePickSorting('SO202412150001', true);
+
+// 返回结果包含：
+// - 生成拣货明细（遵循FIFO原则）
+```
+
+### 3. 波次拣货阶段
+
+```php
+$waveService = new WavePickingService();
+$waveResult = $waveService->generateWavePickingBatch([
+    'strategy' => WavePickingService::STRATEGY_TIME,
+    'warehouse_code' => 'WH01',
+    'max_orders' => 10,
+    'max_items' => 50
+], [
+    'picker' => 'picker001',
+    'optimize_path' => true
+]);
+
+// 返回结果包含：
+// - 生成拣货单
+```
+
+### 4. 手动分配明细
+
+```php
+$waveService = new WavePickingService();
+$assignResult = $waveService->assignDetailsToPickingManually(
+    [1, 2, 3], // 明细ID数组
+    'WWH0120241215000001' // 拣货单号
+);
+
+// 返回结果包含：
+// - 分配成功明细数量
+```
+
+### 5. 拣货执行阶段
+
+```php
+$pickingService = new PickingService();
+$pickingService->startPicking('WWH0120241215000001', 'picker001');
+$pickingService->scanAndPick('WWH0120241215000001', 'SKU001', 10, 'BATCH001');
+$pickingService->completePicking('WWH0120241215000001');
+```
+
+## 🔧 配置选项
+
+### 部分发货配置
+
+```php
+$config = [
+    'enabled' => true,                    // 启用部分发货
+    'min_completion_rate' => 0.8,         // 最小完成率 80%
+    'max_partial_times' => 3,             // 最大部分发货次数
+    'auto_ship_threshold' => 0.9,         // 自动发货阈值 90%
+    'require_approval' => false,          // 无需审批
+    'notification_enabled' => true,       // 启用通知
+];
+
+$orderService->setPartialShipmentConfig($config, 'CUSTOMER001', 'WH001');
+```
+
+### 拣货类型配置
+
+```php
+$pickingOptions = [
+    'picking_type' => PickingService::TYPE_NORMAL,  // 普通拣货
+    'picker' => 'picker001',                        // 指定拣货员
+    'priority' => 1                                 // 优先级
+];
+```
 
 ## 📈 性能优化
 
@@ -186,9 +290,9 @@ usort($details, function($a, $b) {
 ### 环境要求
 
 - PHP 7.4+
-- MySQL 5.7+
-- Redis 5.0+
-
+- Yii2 Framework
+- MySQL 8.0+
+- Redis 6.0+
 
 ## 🎯 未来规划
 
@@ -203,4 +307,6 @@ usort($details, function($a, $b) {
 如有问题或建议，请联系开发团队。
 
 <img src="./docs/image/wechat.png" alt="donate" width="200" />
+
 ---
+
