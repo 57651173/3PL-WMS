@@ -1,8 +1,8 @@
 # 3PL-WMS Lagerverwaltungssystem
 
 ## 🌐 Sprachversionen / Language Versions
-- [中文 (Chinese)](README.md)
-- [English](README_EN.md)
+- [English](README.md)
+- [中文 (Chinese)](README_ZH.md)
 - [Deutsch (German)](README_DE.md) - Aktuelle Seite
 - [日本語 (Japanese)](README_JA.md)
 
@@ -11,6 +11,61 @@
 ## 📋 Projektübersicht
 
 Dieses Projekt ist ein Kernmodul eines Lagerverwaltungssystems auf Unternehmensebene, das sich auf Auftragsbearbeitung, Bestandsverwaltung, Kommissionieroperationen und Versandprozesse konzentriert. Das System verwendet modernes architektonisches Design zur Unterstützung von Lagerbetriebsszenarien mit hoher Parallelität und hoher Verfügbarkeit und folgt strikt dem FIFO (First In, First Out)-Prinzip für die Bestandsverwaltung.
+
+## 🏗️ Systemarchitektur
+
+Dieses System nutzt ein **architektonisches Design, das die Datenzugriffsschicht von der Geschäftslogikschicht trennt**, um Wartbarkeit, Sicherheit und Skalierbarkeit des Codes zu gewährleisten.
+
+### Architekturvorteile
+- **🧩 Klare Verantwortlichkeiten**: Trennung von Datenschicht und Geschäftsschicht
+- **🚀 Einfache Wartung**: Klare Codestruktur, leicht erweiterbar
+- **⚡ Entwicklungseffizienz**: Reduzierung wiederholender Arbeit, Verbesserung der Kollaborationseffizienz
+
+### Geschichtetes Architekturdesign
+
+```
+Geschäftsanwendungsschicht (Services)
+          ↓
+Geschäftslogikschicht (models)
+          ↓
+Datenzugriffsschicht (tables)
+          ↓
+Datenbankschicht (MySQL Tables)
+```
+
+### Kernarchitekturprinzipien
+
+1. **Sicherheit bei Änderungen der Datenbankstruktur**
+   - Bei Änderungen der Datenbankstruktur müssen nur die Tabellenklassen in `common/tables` mit Gii neu generiert werden
+   - Geschäftslogikcode in `common/models` bleibt völlig unbeeinflusst, Code-Sicherheit gewährleistet
+
+2. **Zentralisierte Geschäftslogik-Verwaltung**
+   - Alle geschäftsbezogenen Methoden, berechneten Eigenschaften und Zustandsverwaltung werden in der `models`-Schicht implementiert
+   - Vermeidung der Verteilung von Geschäftslogik an verschiedenen Stellen, Erleichterung von Wartung und Tests
+
+3. **Teamarbeitsfreundlich**
+   - Neue Mitglieder können die Architekturschichtung leicht verstehen und schnell einsteigen
+   - Reduzierung von Code-Konflikten durch Gii-Neugenerierung
+   - Klare Verantwortungsteilung, Verbesserung der Entwicklungseffizienz
+
+### 📖 Dokumentationsressourcen
+
+Für detaillierte technische Dokumentation besuchen Sie: **[📖 Dokumentationszentrum](docs/README.md)**
+
+### 📖 Schnellnavigation
+
+| Kategorie | Beschreibung | Link |
+|-----------|-------------|------|
+| 🏗️ **Architekturdesign** | Systemarchitektur, Entwicklungsstandards und Best Practices | [Dokumentation anzeigen](docs/architecture/README.md) |
+| 📋 **Benutzerhandbücher** | Schnellstart, Bedienungsanleitungen und Prozessbeschreibungen | [Dokumentation anzeigen](docs/guides/) |
+| 🔧 **Technische Anleitungen** | Parallelitätskontrolle, Performance-Optimierung und Architektur-Refactoring | [Dokumentation anzeigen](docs/technical/) |
+| 💡 **Code-Beispiele** | Geschäftsszenario-Beispiele und Code-Referenzen | [Dokumentation anzeigen](docs/examples/) |
+| 📊 **Datenbankdesign** | Tabellenstrukturdesign und Datenmodell-Dokumentation | [Dokumentation anzeigen](docs/database/) |
+| 🔌 **API-Dokumentation** | Schnittstellendokumentation und Verwendungsbeispiele | [Dokumentation anzeigen](docs/api/) |
+
+> 💡 **Tipp**: Alle Dokumentationen sind auf Deutsch verfasst und enthalten vollständige Code-Beispiele und Best-Practice-Anleitungen.
+
+---
 
 ## 🔄 Vollständiger Geschäftsprozess
 
@@ -297,21 +352,36 @@ $pickingOptions = [
 
 - PHP 7.4+
 - Yii2 Framework
-- MySQL 8.0+
-- Redis 6.0+
+- MySQL 5.7+
+- Redis 5.0+
 
-## 🎯 Zukunfts-Roadmap
+## 🎯 Zukunftsplanung
 
-1. **KI-Wegoptimierung** - Maschinelles Lernen zur Optimierung der Kommissionierwege
+1. **KI-Pfadoptimierung** - Maschinelles Lernen zur Optimierung von Kommissionierwegen
 2. **Automatisierungsintegration** - Integration mit automatisierten Geräten
-3. **Mobile Unterstützung** - Entwicklung mobiler Kommissionierungsanwendungen
+3. **Mobile Unterstützung** - Entwicklung mobiler Kommissionieranwendungen
 4. **Datenanalyse** - Kommissioniereffizienz-Analyseberichte
-5. **Multi-Lager-Unterstützung** - Lagerübergreifende Transferfunktionalität
+5. **Multi-Lager-Unterstützung** - Lagertransferfunktionalität
 
 ## 📞 Technischer Support
 
-Bei Fragen oder Vorschlägen wenden Sie sich bitte an das Entwicklungsteam.
+Für Fragen oder Vorschläge wenden Sie sich bitte an das Entwicklungsteam.
 
-<img src="./docs/image/wechat.png" alt="donate" width="200" />
+<img src="./docs/assets/images/image/wechat.png" alt="donate" width="200" />
+
+## 📚 Dokumentationsressourcen
+
+Für detaillierte technische Dokumentation besuchen Sie: **[📖 Dokumentationszentrum](docs/README.md)**
+
+### 📖 Schnellnavigation
+
+| Kategorie | Beschreibung | Link |
+|-----------|-------------|------|
+| 🏗️ **Architekturdesign** | Systemarchitektur, Entwicklungsstandards und Best Practices | [Dokumentation anzeigen](docs/architecture/README.md) |
+| 📋 **Benutzerhandbücher** | Schnellstart, Bedienungsanleitungen und Prozessbeschreibungen | [Dokumentation anzeigen](docs/guides/) |
+| 🔧 **Technische Anleitungen** | Parallelitätskontrolle, Performance-Optimierung und Architektur-Refactoring | [Dokumentation anzeigen](docs/technical/) |
+| 💡 **Code-Beispiele** | Geschäftsszenario-Beispiele und Code-Referenzen | [Dokumentation anzeigen](docs/examples/) |
+| 📊 **Datenbankdesign** | Tabellenstrukturdesign und Datenmodell-Dokumentation | [Dokumentation anzeigen](docs/database/) |
+| 🔌 **API-Dokumentation** | Schnittstellendokumentation und Verwendungsbeispiele | [Dokumentation anzeigen](docs/api/) |
 
 --- 

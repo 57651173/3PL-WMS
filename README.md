@@ -1,84 +1,137 @@
-# 3PL-WMS仓储管理系统
+# 3PL-WMS Warehouse Management System
 
-## 🌐 语言版本 / Language Versions
-- [中文 (Chinese)](README.md) - 当前页面
-- [English](README_EN.md)
-- [Deutsch (German)](README_DE.md)
-- [日本語 (Japanese)](README_JA.md)
+## 🌐 Language Versions / 语言版本
+- [US English ](README.md) - Current Page
+- [CN 中文](README_ZH.md)
+- [DE Deutsch](README_DE.md)
+- [JP 日本語 ](README_JA.md)
 
 ---
 
-## 📋 项目概述
+## 📋 Project Overview
 
-本项目是一个企业级仓储管理系统的核心模块，专注于订单处理、库存管理、拣货作业和发货流程。系统采用现代化的架构设计，支持高并发、高可用的仓储作业场景，并严格遵循FIFO（先进先出）原则进行库存管理。
+This project is a core module of an enterprise-level warehouse management system, focusing on order processing, inventory management, picking operations, and shipping processes. The system adopts modern architectural design to support high-concurrency, high-availability warehouse operation scenarios and strictly follows the FIFO (First In, First Out) principle for inventory management.
 
+## 🏗️ System Architecture
 
-## 🔄 完整业务流程
+This system adopts an **architectural design that separates the data access layer from the business logic layer**, ensuring code maintainability, security, and scalability.
 
-### 第一阶段：订单处理与拣货明细生成
+### Architectural Advantages
+- **🧩 Clear Responsibilities**: Separation of data layer and business layer
+- **🚀 Easy Maintenance**: Clear code structure, easy to extend
+- **⚡ Development Efficiency**: Reduce repetitive work, improve collaboration efficiency
+
+### Layered Architecture Design
 
 ```
-1. 订单提交 (STATUS_PEND)
+Business Application Layer (Services)
+          ↓
+Business Logic Layer (models)
+          ↓
+Data Access Layer (tables)
+          ↓
+Database Layer (MySQL Tables)
+```
+
+### Core Architectural Principles
+
+1. **Database Table Structure Change Safety**
+   - When database table structures change, only need to use Gii to regenerate table classes in `common/tables`
+   - Business logic code in `common/models` remains completely unaffected, ensuring code safety
+
+2. **Centralized Business Logic Management**
+   - All business-related methods, computed properties, and state management are implemented in the `models` layer
+   - Avoid scattering business logic in different places, facilitating maintenance and testing
+
+3. **Team Collaboration Friendly**
+   - New members can easily understand the architectural layering and get started quickly
+   - Reduce code conflicts caused by Gii regeneration
+   - Clear division of responsibilities, improving development efficiency
+
+### 📖 Documentation Resources
+
+For detailed technical documentation, please visit: **[📖 Documentation Center](docs/README.md)**
+
+### 📖 Quick Navigation
+
+| Category | Description | Link |
+|----------|-------------|------|
+| 🏗️ **Architecture Design** | System architecture, development standards and best practices | [View Docs](docs/architecture/README.md) |
+| 📋 **User Guides** | Quick start, operation guides and process instructions | [View Docs](docs/guides/) |
+| 🔧 **Technical Guides** | Concurrency control, performance optimization and architecture refactoring | [View Docs](docs/technical/) |
+| 💡 **Code Examples** | Business scenario examples and code references | [View Docs](docs/examples/) |
+| 📊 **Database Design** | Table structure design and data model documentation | [View Docs](docs/database/) |
+| 🔌 **API Documentation** | Interface documentation and usage examples | [View Docs](docs/api/) |
+
+> 💡 **Tip**: All documentation is written in respective languages with complete code examples and best practice guidance.
+
+---
+
+## 🔄 Complete Business Process
+
+### Phase 1: Order Processing and Picking Detail Generation
+
+```
+1. Order Submission (STATUS_PEND)
    ↓
-2. 订单审核通过 (STATUS_CONF)
+2. Order Approval (STATUS_CONF)
    ↓
-3. 预拣货排序 + FIFO库存冻结 (STATUS_PICK)
+3. Pre-picking Sorting + FIFO Inventory Freeze (STATUS_PICK)
    ↓
-4. 生成拣货明细（picking_no = null, status = pending）
+4. Generate Picking Details (picking_no = null, status = pending)
 ```
 
-**关键操作：**
-- 订单信息验证
-- FIFO库存预检查
-- 状态流转控制
+**Key Operations:**
+- Order information validation
+- FIFO inventory pre-check
+- Status flow control
 
-### 第二阶段：波次拣货与执行
-
-```
-5. 拣货规则按波次绑定 → 补充拣货单号 → 拣货员拣货 → 打包 → 发货
-6. 支持多种波次策略（按时间、库位、客户、优先级等）
-7. 智能合并相同SKU，优化拣货路径
-8. 实时跟踪拣货进度
-```
-
-
-**核心特性：**
-- **FIFO 库存冻结** - 按入库时间先进先出原则冻结批次库存
-- **智能路径优化** - 按库位编码排序优化拣货路径
-- **多维度库存管理** - 批次、库位、仓库三级库存统计
-- **波次拣货** - 根据波次规则分配拣货单号
-
-### 第三阶段：发货处理
+### Phase 2: Wave Picking and Execution
 
 ```
-9. 自动发货处理 (STATUS_SHIP)
+5. Picking rules batch binding → Supplement picking order number → Picker picking → Packaging → Shipping
+6. Support multiple wave strategies (by time, location, customer, priority, etc.)
+7. Intelligent merging of same SKUs, optimize picking paths
+8. Real-time picking progress tracking
+```
+
+**Core Features:**
+- **FIFO Inventory Freeze** - Freeze batch inventory based on first-in-first-out principle by inbound time
+- **Intelligent Path Optimization** - Optimize picking paths by sorting location codes
+- **Multi-dimensional Inventory Management** - Three-level inventory statistics: batch, location, warehouse
+- **Wave Picking** - Assign picking order numbers based on wave rules
+
+### Phase 3: Shipping Processing
+
+```
+9. Automatic Shipping Processing (STATUS_SHIP)
     ↓
-10. FIFO减少冻结库存
+10. FIFO Reduce Frozen Inventory
     ↓
-11. 物流交接
+11. Logistics Handover
     ↓
-12. 客户签收 (STATUS_FINISH)
+12. Customer Delivery (STATUS_FINISH)
 ```
 
-## 🛠️ 技术特性
+## 🛠️ Technical Features
 
-### FIFO 库存管理（核心特性）
+### FIFO Inventory Management (Core Feature)
 
-#### 1. FIFO原则实现
+#### 1. FIFO Principle Implementation
 
 ```php
-// 所有库存操作都按入库时间排序，确保先进先出
+// All inventory operations are sorted by inbound time, ensuring first-in-first-out
 ->orderBy('received_at ASC, created_at ASC')
 ```
 
-#### 2. FIFO库存冻结
+#### 2. FIFO Inventory Freeze
 
-- **自动分配冻结** - `autoAllocateStockFreeze()` 按FIFO原则自动选择批次进行冻结
-- **指定库位冻结** - `freezeLocationStockByFifo()` 在指定库位内按FIFO原则冻结
-- **批次追溯** - 完整记录每个批次的冻结情况和入库时间
+- **Auto Allocation Freeze** - `autoAllocateStockFreeze()` automatically selects batches for freezing based on FIFO principle
+- **Specified Location Freeze** - `freezeLocationStockByFifo()` freezes within specified locations based on FIFO principle
+- **Batch Traceability** - Complete recording of each batch's freeze status and inbound time
 
 ```php
-// 示例：FIFO库存冻结
+// Example: FIFO Inventory Freeze
 $inventoryService->freezeOrderStock(
     'ORD20241215001',
     'WH01',
@@ -90,93 +143,93 @@ $inventoryService->freezeOrderStock(
             'qty_ordered' => 100
         ]
     ],
-    "订单库存冻结"
+    "Order inventory freeze"
 );
 ```
 
-#### 3. FIFO库存释放
+#### 3. FIFO Inventory Release
 
-- **自动释放** - `autoReleaseStockFreeze()` 按FIFO原则释放冻结库存
-- **批次匹配** - 优先释放最早冻结的批次
-- **库存平衡** - 自动更新批次、库位、仓库三级库存统计
+- **Auto Release** - `autoReleaseStockFreeze()` releases frozen inventory based on FIFO principle
+- **Batch Matching** - Prioritize releasing the earliest frozen batches
+- **Inventory Balance** - Automatically update three-level inventory statistics: batch, location, warehouse
 
-#### 4. FIFO库存扣减
+#### 4. FIFO Inventory Deduction
 
-- **自动扣减** - `autoDeductStockFromLocation()` 按FIFO原则扣减可用库存
-- **发货扣减** - 发货时优先扣减最早入库的批次
-- **成本核算** - 支持FIFO成本核算方法
+- **Auto Deduction** - `autoDeductStockFromLocation()` deducts available inventory based on FIFO principle
+- **Shipping Deduction** - Prioritize deducting the earliest inbound batches during shipping
+- **Cost Accounting** - Support FIFO cost accounting method
 
-#### 5. FIFO优势
+#### 5. FIFO Advantages
 
-- **库存周转优化** - 确保先入库的商品先被使用，避免库存积压
-- **保质期管理** - 对于有保质期的商品，FIFO可以减少过期风险
-- **成本核算准确** - 按入库顺序使用库存，成本核算更准确
-- **库存追溯** - 完整的批次追溯链，便于质量问题排查
-- **合规要求** - 满足某些行业的FIFO合规要求
+- **Inventory Turnover Optimization** - Ensure earlier inbound goods are used first, avoiding inventory accumulation
+- **Shelf Life Management** - For goods with shelf life, FIFO can reduce expiration risks
+- **Accurate Cost Accounting** - Use inventory in inbound order for more accurate cost accounting
+- **Inventory Traceability** - Complete batch traceability chain for quality issue investigation
+- **Compliance Requirements** - Meet FIFO compliance requirements in certain industries
 
-#### 6. 适用场景
+#### 6. Applicable Scenarios
 
-- **食品饮料** - 严格的保质期管理
-- **医药行业** - 药品批次管理和有效期控制
-- **化工产品** - 化学品的稳定性和安全性管理
-- **电子产品** - 避免元器件老化和技术过时
-- **服装纺织** - 季节性商品的库存周转
+- **Food & Beverage** - Strict shelf life management
+- **Pharmaceutical Industry** - Drug batch management and expiration date control
+- **Chemical Products** - Chemical stability and safety management
+- **Electronic Products** - Avoid component aging and technical obsolescence
+- **Textile Industry** - Inventory turnover for seasonal goods
 
-### Redis 优化
+### Redis Optimization
 
-- **分布式锁** - 防止并发操作冲突
-- **缓存机制** - 提升查询性能
-- **事件发布** - 实时状态通知
-- **进度跟踪** - 实时拣货进度
+- **Distributed Lock** - Prevent concurrent operation conflicts
+- **Caching Mechanism** - Improve query performance
+- **Event Publishing** - Real-time status notifications
+- **Progress Tracking** - Real-time picking progress
 
-#### 并发控制机制
+#### Concurrency Control Mechanism
 
-系统采用Redis分布式锁来确保高并发场景下的数据一致性：
+The system uses Redis distributed locks to ensure data consistency in high-concurrency scenarios:
 
 ```php
-// 批次库存锁 - 最细粒度
+// Batch inventory lock - finest granularity
 $lockKey = "batch_stock_lock:{$warehouseCode}:{$customerCode}:{$productSku}:{$skuBarcode}:{$lotNumber}";
 
-// 库位库存锁 - 中等粒度
+// Location inventory lock - medium granularity
 $lockKey = "location_stock_lock:{$warehouseCode}:{$locationCode}:{$customerCode}:{$productSku}:{$skuBarcode}";
 
-// 仓库库存锁 - 较粗粒度
+// Warehouse inventory lock - coarse granularity
 $lockKey = "warehouse_stock_lock:{$warehouseCode}:{$customerCode}:{$productSku}:{$skuBarcode}";
 ```
 
-**锁的特性：**
-- **锁超时时间**：30秒，防止死锁
-- **最大等待时间**：10秒，避免长时间阻塞
-- **原子操作**：确保库存更新的原子性
-- **负库存检查**：防止库存超卖
-- **自动重试**：临时性错误自动重试
+**Lock Characteristics:**
+- **Lock Timeout**: 30 seconds, prevent deadlocks
+- **Max Wait Time**: 10 seconds, avoid long blocking
+- **Atomic Operations**: Ensure atomicity of inventory updates
+- **Negative Inventory Check**: Prevent overselling
+- **Auto Retry**: Automatic retry for temporary errors
 
-**并发安全保障：**
-- 多个订单同时冻结库存时，按顺序执行
-- 入库和出库操作并发时，数据保持一致
-- 批次库存更新时，防止数据竞争
-- 库存统计实时准确，无数据丢失
+**Concurrency Safety Guarantees:**
+- Multiple orders freeze inventory simultaneously, executed in sequence
+- Data consistency maintained when inbound and outbound operations are concurrent
+- Prevent data race during batch inventory updates
+- Real-time accurate inventory statistics, no data loss
 
-### 智能路径优化
+### Intelligent Path Optimization
 
 ```php
-// 按库位编码排序，优化拣货路径
+// Sort by location code to optimize picking paths
 usort($details, function($a, $b) {
     return strcmp($a['location_code'], $b['location_code']);
 });
 ```
 
-## 📊 使用示例
+## 📊 Usage Examples
 
-### 1. FIFO库存冻结示例
+### 1. FIFO Inventory Freeze Example
 
 ```php
 $inventoryService = new InventoryService();
 
-// 查看当前库存状态（按FIFO排序）
+// View current inventory status (sorted by FIFO)
 $stockStatus = $inventoryService->getDetailedStockStatus('WH01', 'CUST001', 'SKU001', 'BAR001');
 
-// 执行FIFO库存冻结
+// Execute FIFO inventory freeze
 $result = $inventoryService->freezeOrderStock(
     'ORD20241215001',
     'WH01',
@@ -188,23 +241,23 @@ $result = $inventoryService->freezeOrderStock(
             'qty_ordered' => 50
         ]
     ],
-    "FIFO库存冻结演示"
+    "FIFO inventory freeze demonstration"
 );
 
-// 系统会自动按入库时间先进先出的原则选择批次进行冻结
+// System automatically selects batches for freezing based on first-in-first-out principle by inbound time
 ```
 
-### 2. 订单处理阶段
+### 2. Order Processing Phase
 
 ```php
 $orderService = new OrderService();
 $result = $orderService->performPrePickSorting('SO202412150001', true);
 
-// 返回结果包含：
-// - 生成拣货明细（遵循FIFO原则）
+// Return results include:
+// - Generate picking details (following FIFO principle)
 ```
 
-### 3. 波次拣货阶段
+### 3. Wave Picking Phase
 
 ```php
 $waveService = new WavePickingService();
@@ -218,24 +271,24 @@ $waveResult = $waveService->generateWavePickingBatch([
     'optimize_path' => true
 ]);
 
-// 返回结果包含：
-// - 生成拣货单
+// Return results include:
+// - Generate picking order
 ```
 
-### 4. 手动分配明细
+### 4. Manual Detail Assignment
 
 ```php
 $waveService = new WavePickingService();
 $assignResult = $waveService->assignDetailsToPickingManually(
-    [1, 2, 3], // 明细ID数组
-    'WWH0120241215000001' // 拣货单号
+    [1, 2, 3], // Detail ID array
+    'WWH0120241215000001' // Picking order number
 );
 
-// 返回结果包含：
-// - 分配成功明细数量
+// Return results include:
+// - Number of successfully assigned details
 ```
 
-### 5. 拣货执行阶段
+### 5. Picking Execution Phase
 
 ```php
 $pickingService = new PickingService();
@@ -244,77 +297,91 @@ $pickingService->scanAndPick('WWH0120241215000001', 'SKU001', 10, 'BATCH001');
 $pickingService->completePicking('WWH0120241215000001');
 ```
 
-## 🔧 配置选项
+## 🔧 Configuration Options
 
-### 部分发货配置
+### Partial Shipment Configuration
 
 ```php
 $config = [
-    'enabled' => true,                    // 启用部分发货
-    'min_completion_rate' => 0.8,         // 最小完成率 80%
-    'max_partial_times' => 3,             // 最大部分发货次数
-    'auto_ship_threshold' => 0.9,         // 自动发货阈值 90%
-    'require_approval' => false,          // 无需审批
-    'notification_enabled' => true,       // 启用通知
+    'enabled' => true,                    // Enable partial shipment
+    'min_completion_rate' => 0.8,         // Minimum completion rate 80%
+    'max_partial_times' => 3,             // Maximum partial shipment times
+    'auto_ship_threshold' => 0.9,         // Auto shipment threshold 90%
+    'require_approval' => false,          // No approval required
+    'notification_enabled' => true,       // Enable notifications
 ];
 
 $orderService->setPartialShipmentConfig($config, 'CUSTOMER001', 'WH001');
 ```
 
-### 拣货类型配置
+### Picking Type Configuration
 
 ```php
 $pickingOptions = [
-    'picking_type' => PickingService::TYPE_NORMAL,  // 普通拣货
-    'picker' => 'picker001',                        // 指定拣货员
-    'priority' => 1                                 // 优先级
+    'picking_type' => PickingService::TYPE_NORMAL,  // Normal picking
+    'picker' => 'picker001',                        // Assigned picker
+    'priority' => 1                                 // Priority
 ];
 ```
 
-## 📈 性能优化
+## 📈 Performance Optimization
 
-### 1. Redis 缓存策略
+### 1. Redis Caching Strategy
 
-- **订单信息缓存** - 5分钟 TTL
-- **拣货进度缓存** - 30分钟 TTL
-- **配置信息缓存** - 1小时 TTL
-- **FIFO批次缓存** - 10分钟 TTL
+- **Order Information Cache** - 5 minutes TTL
+- **Picking Progress Cache** - 30 minutes TTL
+- **Configuration Information Cache** - 1 hour TTL
+- **FIFO Batch Cache** - 10 minutes TTL
 
-### 2. 数据库优化
+### 2. Database Optimization
 
-- **索引优化** - 关键字段建立复合索引
-- **FIFO索引** - `(warehouse_code, customer_code, product_sku, received_at, created_at)`
-- **批量操作** - 减少数据库往返次数
-- **分页查询** - 大数据量分页处理
+- **Index Optimization** - Build composite indexes for key fields
+- **FIFO Index** - `(warehouse_code, customer_code, product_sku, received_at, created_at)`
+- **Batch Operations** - Reduce database round trips
+- **Paginated Queries** - Paginated processing for large data volumes
 
-### 3. 并发控制
+### 3. Concurrency Control
 
-- **分布式锁** - 防止并发冲突
-- **原子操作** - 确保数据一致性
-- **重试机制** - 处理临时性错误
+- **Distributed Lock** - Prevent concurrent conflicts
+- **Atomic Operations** - Ensure data consistency
+- **Retry Mechanism** - Handle temporary errors
 
-## 🚀 部署说明
+## 🚀 Deployment Instructions
 
-### 环境要求
+### Environment Requirements
 
 - PHP 7.4+
 - Yii2 Framework
 - MySQL 5.7+
 - Redis 5.0+
 
-## 🎯 未来规划
+## 🎯 Future Roadmap
 
-1. **AI 路径优化** - 机器学习优化拣货路径
-2. **自动化集成** - 与自动化设备集成
-3. **移动端支持** - 开发移动拣货应用
-4. **数据分析** - 拣货效率分析报表
-5. **多仓库支持** - 跨仓库调拨功能
+1. **AI Path Optimization** - Machine learning to optimize picking paths
+2. **Automation Integration** - Integration with automated equipment
+3. **Mobile Support** - Develop mobile picking applications
+4. **Data Analytics** - Picking efficiency analysis reports
+5. **Multi-warehouse Support** - Cross-warehouse transfer functionality
 
-## 📞 技术支持
+## 📞 Technical Support
 
-如有问题或建议，请联系开发团队。
+For questions or suggestions, please contact the development team.
 
-<img src="./docs/image/wechat.png" alt="donate" width="200" />
+<img src="./docs/assets/images/image/wechat.png" alt="donate" width="200" />
 
----
+## 📚 Documentation Resources
 
+For detailed technical documentation, please visit: **[📖 Documentation Center](docs/README.md)**
+
+### 📖 Quick Navigation
+
+| Category | Description | Link |
+|----------|-------------|------|
+| 🏗️ **Architecture Design** | System architecture, development standards and best practices | [View Docs](docs/architecture/README.md) |
+| 📋 **User Guides** | Quick start, operation guides and process instructions | [View Docs](docs/guides/) |
+| 🔧 **Technical Guides** | Concurrency control, performance optimization and architecture refactoring | [View Docs](docs/technical/) |
+| 💡 **Code Examples** | Business scenario examples and code references | [View Docs](docs/examples/) |
+| 📊 **Database Design** | Table structure design and data model documentation | [View Docs](docs/database/) |
+| 🔌 **API Documentation** | Interface documentation and usage examples | [View Docs](docs/api/) |
+
+--- 
